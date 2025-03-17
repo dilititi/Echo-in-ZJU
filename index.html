@@ -15,16 +15,62 @@
             margin: 0;
             padding: 20px;
             font-family: Arial, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
         }
         .container {
             display: flex;
-            gap: 20px;
-            max-width: 1400px;
+            gap: 40px;
+            max-width: 1600px;
             margin: 0 auto;
+            padding: 0 20px;
+            flex: 1;
+        }
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+                gap: 20px;
+                padding: 0 10px;
+            }
+            .map-container {
+                width: 100%;
+            }
+            #map {
+                width: 100%;
+                height: 400px;
+            }
+            .context-container {
+                width: 100%;
+                max-width: 100%;
+                height: auto;
+                min-height: 400px;
+            }
+            .sound-item {
+                padding: 10px;
+            }
+            .editable-title {
+                width: 70%;
+            }
+            .title-bar {
+                flex-direction: column;
+                gap: 10px;
+                align-items: stretch;
+            }
+            .title-bar h1 {
+                margin: 0;
+                text-align: center;
+            }
+            .upload-btn {
+                width: 100%;
+                text-align: center;
+            }
         }
         .map-container {
-            flex: 0 0 auto;
-            width: fit-content;
+            flex: 1;
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
         }
         .context-container {
             flex: 1;
@@ -39,7 +85,7 @@
         }
         #map {
             height: 640px;
-            width: 640px;
+            width: 100%;
             border-radius: 10px;
             overflow: hidden;
         }
@@ -69,6 +115,29 @@
             transition: background-color 0.2s;
             position: relative;
             padding-left: 25px;
+            user-select: none;
+        }
+        @media (max-width: 768px) {
+            .sound-item {
+                touch-action: none;
+            }
+            .sound-item .sound-content {
+                margin-top: 5px;
+            }
+            .sound-item audio {
+                margin: 5px 0;
+            }
+            .tags-container {
+                margin: 3px 0;
+            }
+            .tag {
+                font-size: 0.8em;
+                padding: 1px 6px;
+            }
+            .delete-btn {
+                width: 100%;
+                margin-top: 10px;
+            }
         }
         .sound-item:hover {
             background: #f8f8f8;
@@ -76,6 +145,39 @@
         .sound-item.selected {
             background: #e3f2fd;
             border: 2px solid #2196F3;
+        }
+        .sound-item.expanded {
+            background: #f0f7ff;
+        }
+        .sound-item.dragging {
+            opacity: 0.5;
+            background: #f0f0f0;
+        }
+        .sound-item.drag-over {
+            border-top: 2px solid #2196F3;
+        }
+        .sound-item .expand-icon {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            transition: transform 0.3s;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+        .sound-item.expanded .expand-icon {
+            transform: translateY(-50%) rotate(180deg);
+        }
+        .sound-item .sound-content {
+            display: none;
+            margin-top: 10px;
+        }
+        .sound-item.expanded .sound-content {
+            display: block;
         }
         .sound-item audio {
             width: 100%;
@@ -474,6 +576,11 @@
                     item.classList.add('selected');
                 }
                 
+                // Add drag attributes only for desktop
+                const isMobile = window.innerWidth <= 768;
+                item.draggable = !sound.isDefault && !isMobile;
+                item.dataset.index = index;
+                
                 const colorIndicator = document.createElement('div');
                 colorIndicator.className = 'color-indicator';
                 colorIndicator.style.backgroundColor = sound.color;
@@ -499,14 +606,24 @@
                     e.stopPropagation();
                 });
                 item.appendChild(titleInput);
+
+                // Add expand icon
+                const expandIcon = document.createElement('span');
+                expandIcon.className = 'expand-icon';
+                expandIcon.innerHTML = '▼';
+                item.appendChild(expandIcon);
+
+                // Create content container
+                const contentContainer = document.createElement('div');
+                contentContainer.className = 'sound-content';
                 
                 // Create tags container
-                createTagsContainer(sound, item);
+                createTagsContainer(sound, contentContainer);
                 
                 const audio = document.createElement('audio');
                 audio.controls = true;
                 audio.src = sound.data;
-                item.appendChild(audio);
+                contentContainer.appendChild(audio);
                 
                 if (!sound.isDefault) {
                     const deleteBtn = document.createElement('button');
@@ -514,6 +631,14 @@
                     deleteBtn.className = 'delete-btn';
                     deleteBtn.onclick = (e) => {
                         e.stopPropagation();
+                        // Remove all markers associated with this sound
+                        soundMarkers = soundMarkers.filter(marker => {
+                            if (marker.soundData === sound.data) {
+                                map.removeLayer(marker);
+                                return false;
+                            }
+                            return true;
+                        });
                         soundLibrary.splice(index, 1);
                         usedColors.delete(sound.color);
                         if (selectedSound === sound) {
@@ -522,14 +647,91 @@
                         }
                         saveData();
                     };
-                    item.appendChild(deleteBtn);
+                    contentContainer.appendChild(deleteBtn);
                 }
                 
-                item.onclick = () => {
+                item.appendChild(contentContainer);
+                
+                // Add click handler for expand/collapse
+                item.onclick = (e) => {
+                    if (e.target === titleInput || e.target === expandIcon) {
+                        return;
+                    }
+                    item.classList.toggle('expanded');
+                };
+
+                // Add click handler for expand icon
+                expandIcon.onclick = (e) => {
+                    e.stopPropagation();
+                    item.classList.toggle('expanded');
+                };
+                
+                // Add click handler for selection
+                titleInput.onclick = () => {
                     selectedSound = sound;
                     updateSoundList();
                     updateMapInstruction();
                 };
+
+                // Add drag and drop handlers only for desktop
+                if (!sound.isDefault && !isMobile) {
+                    item.addEventListener('dragstart', (e) => {
+                        item.classList.add('dragging');
+                        e.dataTransfer.setData('text/plain', index);
+                        e.dataTransfer.effectAllowed = 'move';
+                    });
+
+                    item.addEventListener('dragend', () => {
+                        item.classList.remove('dragging');
+                        document.querySelectorAll('.sound-item').forEach(item => {
+                            item.classList.remove('drag-over');
+                        });
+                    });
+
+                    item.addEventListener('dragover', (e) => {
+                        e.preventDefault();
+                        const draggingItem = document.querySelector('.dragging');
+                        if (draggingItem && draggingItem !== item) {
+                            const rect = item.getBoundingClientRect();
+                            const midY = rect.top + rect.height / 2;
+                            if (e.clientY < midY) {
+                                item.classList.add('drag-over');
+                            } else {
+                                item.classList.remove('drag-over');
+                            }
+                        }
+                    });
+
+                    item.addEventListener('dragleave', () => {
+                        item.classList.remove('drag-over');
+                    });
+
+                    item.addEventListener('drop', (e) => {
+                        e.preventDefault();
+                        const fromIndex = parseInt(e.dataTransfer.getData('text/plain'));
+                        const toIndex = parseInt(item.dataset.index);
+                        
+                        // Only allow reordering within user sounds
+                        const userSounds = soundLibrary.filter(s => !s.isDefault);
+                        const fromUserIndex = userSounds.findIndex(s => s === soundLibrary[fromIndex]);
+                        const toUserIndex = userSounds.findIndex(s => s === soundLibrary[toIndex]);
+                        
+                        if (fromUserIndex !== -1 && toUserIndex !== -1 && fromUserIndex !== toUserIndex) {
+                            // Move the sound in the user sounds array
+                            const [movedSound] = userSounds.splice(fromUserIndex, 1);
+                            userSounds.splice(toUserIndex, 0, movedSound);
+                            
+                            // Update the main soundLibrary array
+                            const defaultSounds = soundLibrary.filter(s => s.isDefault);
+                            soundLibrary = [...defaultSounds, ...userSounds];
+                            
+                            // Update the display immediately
+                            updateSoundList();
+                            // Save the new order
+                            saveData();
+                        }
+                    });
+                }
                 
                 if (sound.isDefault) {
                     defaultContainer.appendChild(item);
@@ -590,6 +792,11 @@
             selectedSound = null;
             updateSoundList();
             updateMapInstruction();
+        });
+
+        // Add window resize handler
+        window.addEventListener('resize', () => {
+            updateSoundList();
         });
 
         // Initialize the page
