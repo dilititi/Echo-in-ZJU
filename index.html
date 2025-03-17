@@ -13,81 +13,120 @@
     <style>
         body {
             margin: 0;
-            padding: 20px;
+            padding: 0;
             font-family: Arial, sans-serif;
             min-height: 100vh;
             display: flex;
             flex-direction: column;
+            background: #f0f0f0;
         }
         .container {
+            position: relative;
+            width: 100%;
+            height: 100vh;
             display: flex;
-            gap: 40px;
-            max-width: 1600px;
-            margin: 0 auto;
-            padding: 0 20px;
-            flex: 1;
+            overflow: hidden;
+        }
+        .map-container {
+            position: relative;
+            width: 75%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+        .context-container {
+            position: absolute;
+            right: 0;
+            top: 0;
+            width: 25%;
+            height: 100%;
+            background: rgba(248, 249, 250, 0.95);
+            backdrop-filter: blur(5px);
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            box-shadow: -2px 0 10px rgba(0,0,0,0.1);
+            z-index: 1000;
+        }
+        #map {
+            width: 100%;
+            height: 100%;
+            border-radius: 0;
+        }
+        .title-bar {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            z-index: 1001;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 10px 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+        .title-bar h1 {
+            margin: 0;
+            font-size: 1.5em;
+            color: #333;
+        }
+        .upload-btn {
+            padding: 8px 16px;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: background-color 0.2s;
+        }
+        .upload-btn:hover {
+            background: #45a049;
+        }
+        .instruction {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(255, 255, 255, 0.9);
+            padding: 10px 20px;
+            border-radius: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            z-index: 1001;
+            color: #666;
+            font-size: 0.9em;
         }
         @media (max-width: 768px) {
             .container {
                 flex-direction: column;
-                gap: 20px;
-                padding: 0 10px;
             }
             .map-container {
                 width: 100%;
-            }
-            #map {
-                width: 100%;
-                height: 400px;
+                height: 60vh;
             }
             .context-container {
+                position: relative;
                 width: 100%;
-                max-width: 100%;
-                height: auto;
-                min-height: 400px;
-            }
-            .sound-item {
-                padding: 10px;
-            }
-            .editable-title {
-                width: 70%;
+                height: 40vh;
+                background: #f8f9fa;
             }
             .title-bar {
                 flex-direction: column;
-                gap: 10px;
                 align-items: stretch;
+                gap: 10px;
             }
             .title-bar h1 {
-                margin: 0;
                 text-align: center;
             }
             .upload-btn {
                 width: 100%;
                 text-align: center;
             }
-        }
-        .map-container {
-            flex: 1;
-            min-width: 0;
-            display: flex;
-            flex-direction: column;
-        }
-        .context-container {
-            flex: 1;
-            background: #f8f9fa;
-            border-radius: 10px;
-            padding: 20px;
-            min-width: 300px;
-            max-width: 500px;
-            height: 700px;
-            display: flex;
-            flex-direction: column;
-        }
-        #map {
-            height: 640px;
-            width: 100%;
-            border-radius: 10px;
-            overflow: hidden;
+            .instruction {
+                width: 90%;
+                text-align: center;
+            }
         }
         .sound-list {
             margin-top: 10px;
@@ -210,37 +249,44 @@
             outline: none;
             border-radius: 3px;
         }
-        .title-bar {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-        .upload-btn {
-            padding: 10px 20px;
-            background: #4CAF50;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 1em;
-        }
-        .upload-btn:hover {
-            background: #45a049;
-        }
-        input[type="file"] {
-            display: none;
-        }
         .sound-library-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
             margin-bottom: 15px;
+            gap: 10px;
         }
-        .instruction {
-            color: #666;
+        .sound-library-header h2 {
+            margin: 0;
+            flex-grow: 1;
+        }
+        .header-controls {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        .control-btn {
+            padding: 5px 10px;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
             font-size: 0.9em;
-            margin: 10px 0;
+            transition: background-color 0.2s;
+        }
+        .control-btn:disabled {
+            background: #cccccc;
+            cursor: not-allowed;
+        }
+        .control-btn.undo {
+            background: #2196F3;
+        }
+        .control-btn.redo {
+            background: #FF9800;
+        }
+        .control-btn:hover:not(:disabled) {
+            opacity: 0.9;
         }
         .delete-btn {
             background: #ff4444;
@@ -308,6 +354,85 @@
             font-size: 0.9em;
             width: 80px;
         }
+        .marker-panel {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(5px);
+            padding: 15px;
+            border-top: 1px solid rgba(0,0,0,0.1);
+            z-index: 1000;
+        }
+        .marker-panel-title {
+            font-size: 0.9em;
+            color: #666;
+            margin-bottom: 10px;
+        }
+        .marker-icons {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        .marker-icon-option {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: #f8f9fa;
+            border: 2px solid transparent;
+        }
+        .marker-icon-option:hover {
+            transform: scale(1.1);
+            background: #e9ecef;
+        }
+        .marker-icon-option.selected {
+            border-color: #2196F3;
+            background: #e3f2fd;
+        }
+        .marker-icon-option i {
+            font-size: 1.2em;
+            color: #333;
+        }
+        .custom-marker-input {
+            display: none;
+        }
+        .custom-marker-label {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            background: #f8f9fa;
+            border: 2px dashed #ccc;
+            transition: all 0.2s;
+        }
+        .custom-marker-label:hover {
+            background: #e9ecef;
+            border-color: #2196F3;
+        }
+        .custom-marker-label i {
+            font-size: 1.2em;
+            color: #666;
+        }
+        @media (max-width: 768px) {
+            .marker-panel {
+                position: relative;
+                background: #f8f9fa;
+                border-top: none;
+                border-bottom: 1px solid rgba(0,0,0,0.1);
+            }
+            .marker-icons {
+                justify-content: center;
+            }
+        }
     </style>
 </head>
 <body>
@@ -321,13 +446,50 @@
                 <input type="file" id="sound-upload" accept="audio/*">
             </div>
             <div id="map"></div>
+            <div class="marker-panel">
+                <div class="marker-panel-title">Marker Icon</div>
+                <div class="marker-icons">
+                    <div class="marker-icon-option" data-icon="bell">
+                        <i class="fas fa-bell"></i>
+                    </div>
+                    <div class="marker-icon-option" data-icon="tower">
+                        <i class="fas fa-tower-broadcast"></i>
+                    </div>
+                    <div class="marker-icon-option" data-icon="school">
+                        <i class="fas fa-school"></i>
+                    </div>
+                    <div class="marker-icon-option" data-icon="car">
+                        <i class="fas fa-car"></i>
+                    </div>
+                    <div class="marker-icon-option" data-icon="bird">
+                        <i class="fas fa-dove"></i>
+                    </div>
+                    <div class="marker-icon-option" data-icon="person">
+                        <i class="fas fa-person"></i>
+                    </div>
+                    <div class="marker-icon-option" data-icon="bicycle">
+                        <i class="fas fa-bicycle"></i>
+                    </div>
+                    <div class="marker-icon-option" data-icon="store">
+                        <i class="fas fa-store"></i>
+                    </div>
+                    <label class="custom-marker-label" for="custom-marker">
+                        <i class="fas fa-plus"></i>
+                    </label>
+                    <input type="file" id="custom-marker" accept="image/*" class="custom-marker-input">
+                </div>
+            </div>
             <p class="instruction" id="map-instruction">Select a sound from the library, then click on the map to place it</p>
         </div>
         
         <div class="context-container">
             <div class="sound-library-header">
                 <h2>Sound Library</h2>
-                <span id="sound-count">(0 sounds)</span>
+                <div class="header-controls">
+                    <button class="control-btn undo" id="undo-btn" disabled>Undo</button>
+                    <button class="control-btn redo" id="redo-btn" disabled>Redo</button>
+                    <span id="sound-count">(0 sounds)</span>
+                </div>
             </div>
             <div class="sound-list">
                 <div class="sound-section">
@@ -347,14 +509,17 @@
     integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
     crossorigin=""></script>
     
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
     <script>
         // Initialize the map
         const map = L.map('map', {
             crs: L.CRS.Simple,
             minZoom: -2,
             maxZoom: 2,
-            dragging: false,
-            zoomControl: false
+            dragging: true,
+            zoomControl: true
         });
 
         // Define the bounds of the image
@@ -372,6 +537,11 @@
         let selectedSound = null;
         let soundMarkers = [];
         
+        // History management for undo/redo
+        let history = [];
+        let currentHistoryIndex = -1;
+        const maxHistorySize = 50;
+
         // Color palette for sounds
         const colors = [
             '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEEAD',
@@ -392,20 +562,178 @@
             return color;
         }
 
-        // Create a custom marker icon with color
-        function createColoredMarker(color) {
+        // Add at the beginning of the script section
+        let currentMarkerIcon = 'bell'; // Default icon
+        let customMarkerImage = null;
+
+        // Function to get icon for a sound
+        function getIconForSound(sound) {
+            if (sound.isDefault) {
+                // Set default icons for default sounds
+                if (sound.name.includes('鸟叫')) {
+                    return 'bird';
+                } else if (sound.name.includes('风铃')) {
+                    return 'bell';
+                }
+            }
+            return currentMarkerIcon;
+        }
+
+        // Modify createColoredMarker function
+        function createColoredMarker(color, sound = null) {
+            let iconHtml;
+            if (customMarkerImage) {
+                iconHtml = `<img src="${customMarkerImage}" style="width: 24px; height: 24px; border-radius: 50%;">`;
+            } else {
+                const iconMap = {
+                    'bell': 'fa-bell',
+                    'tower': 'fa-tower-broadcast',
+                    'school': 'fa-school',
+                    'car': 'fa-car',
+                    'bird': 'fa-dove',
+                    'person': 'fa-person',
+                    'bicycle': 'fa-bicycle',
+                    'store': 'fa-store'
+                };
+                const icon = sound ? getIconForSound(sound) : currentMarkerIcon;
+                iconHtml = `<i class="fas ${iconMap[icon]}"></i>`;
+            }
+
             return L.divIcon({
                 className: 'marker-icon',
-                html: `<div class="marker-icon" style="background-color: ${color};">♪</div>`,
+                html: `<div class="marker-icon" style="background-color: ${color}; display: flex; align-items: center; justify-content: center;">${iconHtml}</div>`,
                 iconSize: [24, 24],
                 iconAnchor: [12, 24]
             });
         }
 
+        // Save state to history
+        function saveToHistory() {
+            // Remove any future states if we're not at the end
+            if (currentHistoryIndex < history.length - 1) {
+                history = history.slice(0, currentHistoryIndex + 1);
+            }
+            
+            // Add current state
+            history.push({
+                soundLibrary: JSON.parse(JSON.stringify(soundLibrary)),
+                markers: soundMarkers.map(marker => ({
+                    lat: marker.getLatLng().lat,
+                    lng: marker.getLatLng().lng,
+                    soundData: marker.soundData,
+                    fileName: marker.fileName,
+                    color: marker.color
+                }))
+            });
+            
+            // Limit history size
+            if (history.length > maxHistorySize) {
+                history.shift();
+            }
+            
+            currentHistoryIndex = history.length - 1;
+            updateUndoRedoButtons();
+        }
+
+        // Update undo/redo buttons state
+        function updateUndoRedoButtons() {
+            document.getElementById('undo-btn').disabled = currentHistoryIndex <= 0;
+            document.getElementById('redo-btn').disabled = currentHistoryIndex >= history.length - 1;
+        }
+
+        // Undo function
+        function undo() {
+            if (currentHistoryIndex > 0) {
+                currentHistoryIndex--;
+                restoreState(history[currentHistoryIndex]);
+            }
+        }
+
+        // Redo function
+        function redo() {
+            if (currentHistoryIndex < history.length - 1) {
+                currentHistoryIndex++;
+                restoreState(history[currentHistoryIndex]);
+            }
+        }
+
+        // Restore state from history
+        function restoreState(state) {
+            // Clear current markers
+            soundMarkers.forEach(marker => map.removeLayer(marker));
+            soundMarkers = [];
+            
+            // Restore sound library
+            soundLibrary = JSON.parse(JSON.stringify(state.soundLibrary));
+            
+            // Restore markers
+            state.markers.forEach(markerData => {
+                const sound = soundLibrary.find(s => s.data === markerData.soundData);
+                if (sound) {
+                    createMarker(markerData.lat, markerData.lng, sound.data, sound.name, sound.color);
+                }
+            });
+            
+            updateSoundList();
+            updateMapInstruction();
+            updateUndoRedoButtons();
+        }
+
+        // Add event listeners for undo/redo buttons
+        document.getElementById('undo-btn').addEventListener('click', undo);
+        document.getElementById('redo-btn').addEventListener('click', redo);
+
+        // Add keyboard shortcuts for undo/redo
+        document.addEventListener('keydown', (e) => {
+            if (e.ctrlKey || e.metaKey) {
+                if (e.key === 'z') {
+                    e.preventDefault();
+                    if (e.shiftKey) {
+                        redo();
+                    } else {
+                        undo();
+                    }
+                }
+            }
+        });
+
         // Load saved data from localStorage
         function loadSavedData() {
             try {
                 soundLibrary = JSON.parse(localStorage.getItem('soundLibrary') || '[]');
+                
+                // Add default sounds if they don't exist
+                const defaultSounds = [
+                    {
+                        name: "鸟叫声",
+                        data: "./default_sound/1-纯鸟叫（无解说）-480P 清晰-AVC.wav",
+                        color: getNextColor(),
+                        tags: ["自然", "鸟叫"],
+                        isDefault: true,
+                        defaultPosition: { lat: 320, lng: 320 } // Center of the map
+                    },
+                    {
+                        name: "风铃声",
+                        data: "./default_sound/1-声音素材 风铃声-480P 清晰-AVC.wav",
+                        color: getNextColor(),
+                        tags: ["自然", "风铃"],
+                        isDefault: true,
+                        defaultPosition: { lat: 160, lng: 160 } // Top-left quadrant
+                    }
+                ];
+
+                // Check if default sounds already exist
+                defaultSounds.forEach(defaultSound => {
+                    const exists = soundLibrary.some(sound => 
+                        sound.data === defaultSound.data || 
+                        (sound.isDefault && sound.name === defaultSound.name)
+                    );
+                    if (!exists) {
+                        soundLibrary.push(defaultSound);
+                    }
+                });
+
+                // Process all sounds
                 soundLibrary.forEach(sound => {
                     if (!sound.color) {
                         sound.color = getNextColor();
@@ -418,14 +746,42 @@
                     }
                     usedColors.add(sound.color);
                 });
+
                 const savedMarkers = JSON.parse(localStorage.getItem('soundMarkers') || '[]');
-                savedMarkers.forEach(markerData => {
-                    const sound = soundLibrary.find(s => s.data === markerData.soundData);
-                    if (sound) {
-                        createMarker(markerData.lat, markerData.lng, sound.data, sound.name, sound.color);
-                    }
-                });
+                
+                // If no markers are saved, create default markers for default sounds
+                if (savedMarkers.length === 0) {
+                    soundLibrary.forEach(sound => {
+                        if (sound.isDefault) {
+                            createMarker(
+                                sound.defaultPosition.lat,
+                                sound.defaultPosition.lng,
+                                sound.data,
+                                sound.name,
+                                sound.color,
+                                true
+                            );
+                        }
+                    });
+                } else {
+                    // Load saved markers
+                    savedMarkers.forEach(markerData => {
+                        const sound = soundLibrary.find(s => s.data === markerData.soundData);
+                        if (sound) {
+                            createMarker(
+                                markerData.lat,
+                                markerData.lng,
+                                sound.data,
+                                sound.name,
+                                sound.color,
+                                sound.isDefault
+                            );
+                        }
+                    });
+                }
+                
                 updateSoundList();
+                saveToHistory(); // Initialize history with current state
             } catch (error) {
                 console.error('Error loading saved data:', error);
                 soundLibrary = [];
@@ -445,6 +801,8 @@
                     color: marker.color
                 }));
                 localStorage.setItem('soundMarkers', JSON.stringify(markersData));
+                saveToHistory();
+                
                 // Only update the list if we're not in the middle of a title edit
                 if (!document.activeElement.classList.contains('editable-title')) {
                     updateSoundList();
@@ -454,10 +812,11 @@
             }
         }
 
-        // Create a marker with audio
-        function createMarker(lat, lng, soundData, fileName, color) {
+        // Modify createMarker function
+        function createMarker(lat, lng, soundData, fileName, color, isDefault = false) {
+            const sound = soundLibrary.find(s => s.data === soundData);
             const marker = L.marker([lat, lng], {
-                icon: createColoredMarker(color),
+                icon: createColoredMarker(color, sound),
                 draggable: true
             }).addTo(map);
             
@@ -478,15 +837,18 @@
             audio.src = soundData;
             popupContent.appendChild(audio);
             
-            const deleteButton = document.createElement('button');
-            deleteButton.textContent = 'Delete Marker';
-            deleteButton.className = 'delete-btn';
-            deleteButton.onclick = () => {
-                map.removeLayer(marker);
-                soundMarkers = soundMarkers.filter(m => m !== marker);
-                saveData();
-            };
-            popupContent.appendChild(deleteButton);
+            // Only add delete button for non-default sounds
+            if (!isDefault) {
+                const deleteButton = document.createElement('button');
+                deleteButton.textContent = 'Delete Marker';
+                deleteButton.className = 'delete-btn';
+                deleteButton.onclick = () => {
+                    map.removeLayer(marker);
+                    soundMarkers = soundMarkers.filter(m => m !== marker);
+                    saveData();
+                };
+                popupContent.appendChild(deleteButton);
+            }
             
             marker.bindPopup(popupContent);
             
@@ -764,8 +1126,13 @@
             const instruction = document.getElementById('map-instruction');
             if (selectedSound) {
                 instruction.textContent = `Click on the map to place "${selectedSound.name}"`;
+                instruction.style.display = 'block';
             } else {
                 instruction.textContent = 'Select a sound from the library, then click on the map to place it';
+                // Only show the instruction if no markers have been placed yet
+                if (soundMarkers.length === 0) {
+                    instruction.style.display = 'block';
+                }
             }
         }
 
@@ -809,7 +1176,10 @@
                         selectedSound.name, selectedSound.color);
             selectedSound = null;
             updateSoundList();
-            updateMapInstruction();
+            
+            // Hide the instruction text after first marker placement
+            const instruction = document.getElementById('map-instruction');
+            instruction.style.display = 'none';
         });
 
         // Add window resize handler
@@ -820,6 +1190,9 @@
         // Initialize the page
         loadSavedData();
         updateMapInstruction();
+
+        // Add to the initialization section
+        initializeMarkerIcons();
     </script>
 </body>
 </html>
