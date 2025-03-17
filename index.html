@@ -445,7 +445,10 @@
                     color: marker.color
                 }));
                 localStorage.setItem('soundMarkers', JSON.stringify(markersData));
-                updateSoundList();
+                // Only update the list if we're not in the middle of a title edit
+                if (!document.activeElement.classList.contains('editable-title')) {
+                    updateSoundList();
+                }
             } catch (error) {
                 console.error('Error saving data:', error);
             }
@@ -593,6 +596,7 @@
                 titleInput.style.color = sound.color;
                 titleInput.addEventListener('change', (e) => {
                     sound.name = e.target.value;
+                    // Update markers with new name
                     soundMarkers.forEach(marker => {
                         if (marker.soundData === sound.data) {
                             const popup = marker.getPopup();
@@ -600,6 +604,7 @@
                             content.querySelector('strong').textContent = sound.name;
                         }
                     });
+                    // Save changes without refreshing the list
                     saveData();
                 });
                 titleInput.addEventListener('click', (e) => {
@@ -631,21 +636,34 @@
                     deleteBtn.className = 'delete-btn';
                     deleteBtn.onclick = (e) => {
                         e.stopPropagation();
+                        e.preventDefault();
+                        
+                        // Find the sound to delete
+                        const soundToDelete = sound;
+                        
                         // Remove all markers associated with this sound
-                        soundMarkers = soundMarkers.filter(marker => {
-                            if (marker.soundData === sound.data) {
+                        soundMarkers.forEach(marker => {
+                            if (marker.soundData === soundToDelete.data) {
                                 map.removeLayer(marker);
-                                return false;
                             }
-                            return true;
                         });
-                        soundLibrary.splice(index, 1);
-                        usedColors.delete(sound.color);
-                        if (selectedSound === sound) {
-                            selectedSound = null;
-                            updateMapInstruction();
+                        soundMarkers = soundMarkers.filter(marker => marker.soundData !== soundToDelete.data);
+                        
+                        // Remove the sound from the library
+                        const index = soundLibrary.findIndex(s => s.data === soundToDelete.data);
+                        if (index !== -1) {
+                            soundLibrary.splice(index, 1);
+                            usedColors.delete(soundToDelete.color);
+                            
+                            if (selectedSound === soundToDelete) {
+                                selectedSound = null;
+                                updateMapInstruction();
+                            }
+                            
+                            // Update the display and save
+                            updateSoundList();
+                            saveData();
                         }
-                        saveData();
                     };
                     contentContainer.appendChild(deleteBtn);
                 }
