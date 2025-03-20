@@ -151,39 +151,61 @@
             border-radius: 8px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
             cursor: pointer;
-            transition: background-color 0.2s;
+            transition: all 0.3s ease;
             position: relative;
             padding-left: 25px;
             user-select: none;
         }
-        @media (max-width: 768px) {
-            .sound-item {
-                touch-action: none;
-            }
-            .sound-item .sound-content {
-                margin-top: 5px;
-            }
-            .sound-item audio {
-                margin: 5px 0;
-            }
-            .tags-container {
-                margin: 3px 0;
-            }
-            .tag {
-                font-size: 0.8em;
-                padding: 1px 6px;
-            }
-            .delete-btn {
-                width: 100%;
-                margin-top: 10px;
-            }
+        .sound-item.selected::before {
+            content: '✓';
+            position: absolute;
+            left: 5px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #4CAF50;
+            font-weight: bold;
+        }
+        .sound-item .binding-status {
+            position: absolute;
+            right: 35px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 1.2em;
+            color: #666;
+            transition: all 0.3s ease;
+        }
+        .sound-item .binding-status.unbound::before {
+            content: '▢';
+        }
+        .sound-item .binding-status.bound::before {
+            content: '▣';
+            color: #4CAF50;
+        }
+        .sound-item .binding-status.pending::before {
+            content: '▣';
+            color: #FFA726;
+            animation: pulse 1.5s infinite;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
         }
         .sound-item:hover {
-            background: #f8f8f8;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
         }
         .sound-item.selected {
             background: #e3f2fd;
             border: 2px solid #2196F3;
+        }
+        .sound-item.pending-binding {
+            background: #fff3e0;
+            border: 2px solid #FFA726;
+        }
+        .sound-item.bound {
+            background: #e8f5e9;
+            border: 2px solid #4CAF50;
         }
         .sound-item.expanded {
             background: #f0f7ff;
@@ -433,19 +455,242 @@
                 justify-content: center;
             }
         }
+        /* Marker Icon Selector Styles */
+        .marker-icon-selector {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            z-index: 1001;
+        }
+        .marker-icon-options {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .marker-icon-option {
+            width: 30px;
+            height: 30px;
+            border: 2px solid transparent;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .marker-icon-option.selected {
+            border-color: #2196F3;
+        }
+        .marker-icon-option img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+        .custom-marker-upload {
+            margin-top: 10px;
+            font-size: 0.9em;
+        }
+        .title-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .record-btn {
+            background: #f44336;
+            padding: 8px 16px;
+            margin-left: 10px;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .record-btn:hover {
+            background: #da190b;
+        }
+        .record-btn.recording {
+            background: #ff1744;
+            animation: pulse 1.5s infinite;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        .ripple {
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.7);
+            transform: scale(0);
+            animation: ripple 0.8s linear;
+            pointer-events: none;
+        }
+        @keyframes ripple {
+            to {
+                transform: scale(4);
+                opacity: 0;
+            }
+        }
+        .marker-cluster {
+            background-clip: padding-box;
+            border-radius: 20px;
+            color: white;
+            text-align: center;
+            font-weight: bold;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            will-change: transform;
+            transform: translateZ(0);
+            backface-visibility: hidden;
+            perspective: 1000px;
+        }
+        .marker-cluster div {
+            width: 30px;
+            height: 30px;
+            margin-left: 5px;
+            margin-top: 5px;
+            text-align: center;
+            border-radius: 15px;
+            font: 12px "Helvetica Neue", Arial, Helvetica, sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        /* Binding Status Styles */
+        .binding-status {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            margin-top: 5px;
+            transition: all 0.3s ease;
+        }
+
+        .binding-status.bound {
+            background-color: #e8f5e9;
+            color: #2e7d32;
+        }
+
+        .binding-status.unbound {
+            background-color: #ffebee;
+            color: #c62828;
+        }
+
+        /* Marker Placement Mode Button */
+        .marker-mode-btn {
+            background-color: white;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .marker-mode-btn:hover {
+            background-color: #f5f5f5;
+        }
+
+        /* Pending Binding Marker */
+        .pending-binding {
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+                opacity: 1;
+            }
+            50% {
+                transform: scale(1.2);
+                opacity: 0.8;
+            }
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        /* Map Instruction Styles */
+        #map-instruction {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: rgba(255, 255, 255, 0.9);
+            padding: 10px 20px;
+            border-radius: 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            z-index: 1000;
+            font-size: 14px;
+            color: #333;
+            transition: all 0.3s ease;
+        }
+
+        /* Sound Item Binding Status */
+        .sound-item .binding-status {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        /* Binding Success Animation */
+        @keyframes bindSuccess {
+            0% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.2);
+            }
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        .binding-status.bound {
+            animation: bindSuccess 0.5s ease;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="map-container">
+            <div id="map"></div>
             <div class="title-bar">
                 <h1>Sound Map</h1>
-                <label class="upload-btn" for="sound-upload">
+                <input type="file" id="sound-upload" accept="audio/*" style="display: none;">
+                <button class="upload-btn" onclick="document.getElementById('sound-upload').click()">
                     Upload Sound
-                </label>
-                <input type="file" id="sound-upload" accept="audio/*">
+                </button>
+                <button class="record-btn" id="record-btn">
+                    Start Recording
+                </button>
             </div>
-            <div id="map"></div>
+            <!-- Marker Icon Selector -->
+            <div class="marker-icon-selector">
+                <div>Marker Icon:</div>
+                <div class="marker-icon-options">
+                    <div class="marker-icon-option selected" data-icon="default">
+                        <img src="https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png" alt="Default">
+                    </div>
+                    <div class="marker-icon-option" data-icon="red">
+                        <img src="https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png" alt="Red">
+                    </div>
+                    <div class="marker-icon-option" data-icon="green">
+                        <img src="https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png" alt="Green">
+                    </div>
+                    <div class="marker-icon-option" data-icon="yellow">
+                        <img src="https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-yellow.png" alt="Yellow">
+                    </div>
+                </div>
+                <div class="custom-marker-upload">
+                    <input type="file" id="custom-marker" accept="image/*" style="display: none;">
+                    <button onclick="document.getElementById('custom-marker').click()">Upload Custom Icon</button>
+                </div>
+            </div>
             <div class="marker-panel">
                 <div class="marker-panel-title">Marker Icon</div>
                 <div class="marker-icons">
@@ -562,21 +807,69 @@
             return color;
         }
 
-        // Add at the beginning of the script section
-        let currentMarkerIcon = 'bell'; // Default icon
+        // Add marker icon variables and configuration
+        let currentMarkerIcon = 'default';
         let customMarkerImage = null;
+        let markerIcons = {
+            default: L.icon({
+                iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png',
+                shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+                iconSize: [25, 41],
+                iconAnchor: [12, 41]
+            }),
+            red: L.icon({
+                iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
+                shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+                iconSize: [25, 41],
+                iconAnchor: [12, 41]
+            }),
+            green: L.icon({
+                iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png',
+                shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+                iconSize: [25, 41],
+                iconAnchor: [12, 41]
+            }),
+            yellow: L.icon({
+                iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-yellow.png',
+                shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+                iconSize: [25, 41],
+                iconAnchor: [12, 41]
+            })
+        };
 
-        // Function to get icon for a sound
-        function getIconForSound(sound) {
-            if (sound.isDefault) {
-                // Set default icons for default sounds
-                if (sound.name.includes('鸟叫')) {
-                    return 'bird';
-                } else if (sound.name.includes('风铃')) {
-                    return 'bell';
+        // Initialize marker icons
+        function initializeMarkerIcons() {
+            document.querySelectorAll('.marker-icon-option').forEach(icon => {
+                icon.addEventListener('click', function() {
+                    // Remove all selected states
+                    document.querySelectorAll('.marker-icon-option').forEach(i => 
+                        i.classList.remove('selected'));
+                    
+                    // Set current selected state
+                    this.classList.add('selected');
+                    currentMarkerIcon = this.dataset.icon;
+                    customMarkerImage = null; // Reset custom image
+                });
+            });
+
+            // Handle custom icon upload
+            document.getElementById('custom-marker').addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    if (!file.type.startsWith('image/')) {
+                        alert('Please upload an image file!');
+                        return;
+                    }
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        customMarkerImage = e.target.result;
+                        // Update selected state
+                        document.querySelectorAll('.marker-icon-option').forEach(i => 
+                            i.classList.remove('selected'));
+                    };
+                    reader.readAsDataURL(file);
                 }
-            }
-            return currentMarkerIcon;
+            });
         }
 
         // Modify createColoredMarker function
@@ -605,6 +898,19 @@
                 iconSize: [24, 24],
                 iconAnchor: [12, 24]
             });
+        }
+
+        // Function to get icon for a sound
+        function getIconForSound(sound) {
+            if (sound.isDefault) {
+                // Set default icons for default sounds
+                if (sound.name.includes('鸟叫')) {
+                    return 'bird';
+                } else if (sound.name.includes('风铃')) {
+                    return 'bell';
+                }
+            }
+            return currentMarkerIcon;
         }
 
         // Save state to history
@@ -812,119 +1118,157 @@
             }
         }
 
-        // Modify createMarker function
+        // Add marker placement mode state
+        let isMarkerPlacementMode = false;
+        let pendingMarker = null;
+
+        // Add marker placement mode toggle button
+        const markerModeBtn = L.control({ position: 'topright' });
+        markerModeBtn.onAdd = function(map) {
+            const div = L.DomUtil.create('div', 'leaflet-bar leaflet-control');
+            const button = L.DomUtil.create('a', 'marker-mode-btn', div);
+            button.innerHTML = '🎯';
+            button.title = 'Toggle Marker Placement Mode';
+            button.style.fontSize = '20px';
+            button.style.padding = '5px 10px';
+            
+            L.DomEvent.on(button, 'click', function(e) {
+                L.DomEvent.stopPropagation(e);
+                isMarkerPlacementMode = !isMarkerPlacementMode;
+                button.style.backgroundColor = isMarkerPlacementMode ? '#e3f2fd' : '';
+                button.style.borderColor = isMarkerPlacementMode ? '#2196F3' : '';
+                updateMapInstruction();
+            });
+            
+            return div;
+        };
+        markerModeBtn.addTo(map);
+
+        // Update createMarker function to support binding status
         function createMarker(lat, lng, soundData, fileName, color, isDefault = false) {
             const sound = soundLibrary.find(s => s.data === soundData);
             const marker = L.marker([lat, lng], {
                 icon: createColoredMarker(color, sound),
                 draggable: true
-            }).addTo(map);
-            
-            marker.soundData = soundData;
-            marker.fileName = fileName;
-            marker.color = color;
-            
+            });
+
+            // Set initial binding status
+            marker.bindingStatus = 'unbound';
+            if (soundData) {
+                marker.bindingStatus = 'bound';
+            }
+
+            // Add visual effects based on binding status
+            const markerElement = marker.getElement();
+            if (markerElement) {
+                markerElement.style.opacity = marker.bindingStatus === 'unbound' ? '0.7' : '1';
+                markerElement.style.transition = 'all 0.3s ease';
+            }
+
+            // Handle marker click for binding
+            marker.on('click', function(e) {
+                if (isMarkerPlacementMode) {
+                    // In marker placement mode, clicking creates a new unbound marker
+                    const newMarker = createMarker(e.latlng.lat, e.latlng.lng, null, 'New Marker', '#666');
+                    newMarker.bindingStatus = 'unbound';
+                    markerClusterGroup.addLayer(newMarker);
+                    pendingMarker = newMarker;
+                    updateMapInstruction();
+                } else if (this.bindingStatus === 'unbound') {
+                    // Select marker for binding
+                    if (pendingMarker) {
+                        pendingMarker.getElement().classList.remove('pending-binding');
+                    }
+                    this.getElement().classList.add('pending-binding');
+                    pendingMarker = this;
+                    updateMapInstruction();
+                }
+            });
+
+            // Create popup content
             const popupContent = document.createElement('div');
             popupContent.className = 'custom-marker-popup';
             
             const title = document.createElement('strong');
-            title.textContent = fileName;
+            title.textContent = fileName || 'Unbound Marker';
             title.style.color = color;
             popupContent.appendChild(title);
             
-            const audio = document.createElement('audio');
-            audio.controls = true;
-            audio.src = soundData;
-            popupContent.appendChild(audio);
-            
-            // Only add delete button for non-default sounds
-            if (!isDefault) {
-                const deleteButton = document.createElement('button');
-                deleteButton.textContent = 'Delete Marker';
-                deleteButton.className = 'delete-btn';
-                deleteButton.onclick = () => {
-                    map.removeLayer(marker);
-                    soundMarkers = soundMarkers.filter(m => m !== marker);
-                    saveData();
-                };
-                popupContent.appendChild(deleteButton);
+            if (soundData) {
+                const audio = document.createElement('audio');
+                audio.controls = true;
+                audio.src = soundData;
+                popupContent.appendChild(audio);
             }
-            
+
+            // Add binding status indicator
+            const statusIndicator = document.createElement('div');
+            statusIndicator.className = 'binding-status ' + marker.bindingStatus;
+            popupContent.appendChild(statusIndicator);
+
             marker.bindPopup(popupContent);
+            marker.on('dragend', debouncedSave);
             
-            // Add drag end event listener
-            marker.on('dragend', function() {
-                saveData();
-            });
-            
+            markerClusterGroup.addLayer(marker);
             soundMarkers.push(marker);
-            saveData();
+            return marker;
         }
 
-        // Create tags container
-        function createTagsContainer(sound, container) {
-            const tagsContainer = document.createElement('div');
-            tagsContainer.className = 'tags-container';
-            
-            // Display existing tags
-            sound.tags.forEach(tag => {
-                const tagElement = document.createElement('span');
-                tagElement.className = 'tag';
-                tagElement.textContent = tag;
-                
-                const removeButton = document.createElement('span');
-                removeButton.className = 'remove-tag';
-                removeButton.textContent = '×';
-                removeButton.onclick = (e) => {
-                    e.stopPropagation();
-                    sound.tags = sound.tags.filter(t => t !== tag);
-                    saveData();
-                };
-                
-                tagElement.appendChild(removeButton);
-                tagsContainer.appendChild(tagElement);
-            });
-            
-            // Add tag button
-            const addTagBtn = document.createElement('button');
-            addTagBtn.className = 'add-tag-btn';
-            addTagBtn.textContent = '+ Add Tag';
-            addTagBtn.onclick = (e) => {
-                e.stopPropagation();
-                const input = document.createElement('input');
-                input.className = 'tag-input';
-                input.placeholder = 'New tag';
-                
-                input.onkeydown = (e) => {
-                    if (e.key === 'Enter') {
-                        const newTag = input.value.trim();
-                        if (newTag && !sound.tags.includes(newTag)) {
-                            sound.tags.push(newTag);
-                            saveData();
-                        }
-                        tagsContainer.removeChild(input);
-                        addTagBtn.style.display = 'inline-flex';
-                    } else if (e.key === 'Escape') {
-                        tagsContainer.removeChild(input);
-                        addTagBtn.style.display = 'inline-flex';
-                    }
-                };
-                
-                input.onblur = () => {
-                    tagsContainer.removeChild(input);
-                    addTagBtn.style.display = 'inline-flex';
-                };
-                
-                addTagBtn.style.display = 'none';
-                tagsContainer.appendChild(input);
-                input.focus();
+        // Update sound item click handler for binding
+        function updateSoundItemClickHandler(item, sound) {
+            item.onclick = (e) => {
+                if (e.target === titleInput || e.target === expandIcon) {
+                    return;
+                }
+
+                if (pendingMarker) {
+                    // Bind sound to pending marker
+                    pendingMarker.soundData = sound.data;
+                    pendingMarker.fileName = sound.name;
+                    pendingMarker.color = sound.color;
+                    pendingMarker.bindingStatus = 'bound';
+                    pendingMarker.setIcon(createColoredMarker(sound.color, sound));
+                    
+                    // Update popup
+                    const popup = pendingMarker.getPopup();
+                    const content = popup.getContent();
+                    content.querySelector('strong').textContent = sound.name;
+                    content.querySelector('audio').src = sound.data;
+                    content.querySelector('.binding-status').className = 'binding-status bound';
+                    
+                    // Play binding success sound
+                    const bindingSound = new Audio('./sounds/bind-success.mp3');
+                    bindingSound.play().catch(() => {});
+
+                    // Reset pending state
+                    pendingMarker.getElement().classList.remove('pending-binding');
+                    pendingMarker = null;
+                    updateMapInstruction();
+                } else {
+                    // Normal selection behavior
+                    selectedSound = sound;
+                    updateSoundList();
+                    updateMapInstruction();
+                }
             };
-            
-            tagsContainer.appendChild(addTagBtn);
-            container.appendChild(tagsContainer);
         }
 
-        // Update the sound library display
+        // Update map instruction based on current mode
+        function updateMapInstruction() {
+            const instruction = document.getElementById('map-instruction');
+            if (isMarkerPlacementMode) {
+                instruction.textContent = 'Click on the map to place a new marker';
+            } else if (pendingMarker) {
+                instruction.textContent = 'Click a sound file to bind it to the selected marker';
+            } else if (selectedSound) {
+                instruction.textContent = `Click on the map to place "${selectedSound.name}"`;
+            } else {
+                instruction.textContent = 'Select a sound from the library or enter marker placement mode';
+            }
+            instruction.style.display = 'block';
+        }
+
+        // Update the sound library display to include binding status
         function updateSoundList() {
             const defaultContainer = document.getElementById('default-sounds-container');
             const userContainer = document.getElementById('user-sounds-container');
@@ -940,7 +1284,13 @@
                 if (selectedSound === sound) {
                     item.classList.add('selected');
                 }
-                
+
+                // Add binding status indicator
+                const bindingStatus = document.createElement('div');
+                bindingStatus.className = 'binding-status ' + 
+                    (soundMarkers.some(m => m.soundData === sound.data) ? 'bound' : 'unbound');
+                item.appendChild(bindingStatus);
+
                 // Add drag attributes only for desktop
                 const isMobile = window.innerWidth <= 768;
                 item.draggable = !sound.isDefault && !isMobile;
@@ -1032,6 +1382,9 @@
                 
                 item.appendChild(contentContainer);
                 
+                // Update click handler for binding
+                updateSoundItemClickHandler(item, sound);
+                
                 // Add click handler for expand/collapse
                 item.onclick = (e) => {
                     if (e.target === titleInput || e.target === expandIcon) {
@@ -1046,94 +1399,12 @@
                     item.classList.toggle('expanded');
                 };
                 
-                // Add click handler for selection
-                titleInput.onclick = () => {
-                    selectedSound = sound;
-                    updateSoundList();
-                    updateMapInstruction();
-                };
-
-                // Add drag and drop handlers only for desktop
-                if (!sound.isDefault && !isMobile) {
-                    item.addEventListener('dragstart', (e) => {
-                        item.classList.add('dragging');
-                        e.dataTransfer.setData('text/plain', index);
-                        e.dataTransfer.effectAllowed = 'move';
-                    });
-
-                    item.addEventListener('dragend', () => {
-                        item.classList.remove('dragging');
-                        document.querySelectorAll('.sound-item').forEach(item => {
-                            item.classList.remove('drag-over');
-                        });
-                    });
-
-                    item.addEventListener('dragover', (e) => {
-                        e.preventDefault();
-                        const draggingItem = document.querySelector('.dragging');
-                        if (draggingItem && draggingItem !== item) {
-                            const rect = item.getBoundingClientRect();
-                            const midY = rect.top + rect.height / 2;
-                            if (e.clientY < midY) {
-                                item.classList.add('drag-over');
-                            } else {
-                                item.classList.remove('drag-over');
-                            }
-                        }
-                    });
-
-                    item.addEventListener('dragleave', () => {
-                        item.classList.remove('drag-over');
-                    });
-
-                    item.addEventListener('drop', (e) => {
-                        e.preventDefault();
-                        const fromIndex = parseInt(e.dataTransfer.getData('text/plain'));
-                        const toIndex = parseInt(item.dataset.index);
-                        
-                        // Only allow reordering within user sounds
-                        const userSounds = soundLibrary.filter(s => !s.isDefault);
-                        const fromUserIndex = userSounds.findIndex(s => s === soundLibrary[fromIndex]);
-                        const toUserIndex = userSounds.findIndex(s => s === soundLibrary[toIndex]);
-                        
-                        if (fromUserIndex !== -1 && toUserIndex !== -1 && fromUserIndex !== toUserIndex) {
-                            // Move the sound in the user sounds array
-                            const [movedSound] = userSounds.splice(fromUserIndex, 1);
-                            userSounds.splice(toUserIndex, 0, movedSound);
-                            
-                            // Update the main soundLibrary array
-                            const defaultSounds = soundLibrary.filter(s => s.isDefault);
-                            soundLibrary = [...defaultSounds, ...userSounds];
-                            
-                            // Update the display immediately
-                            updateSoundList();
-                            // Save the new order
-                            saveData();
-                        }
-                    });
-                }
-                
                 if (sound.isDefault) {
                     defaultContainer.appendChild(item);
                 } else {
                     userContainer.appendChild(item);
                 }
             });
-        }
-
-        // Update map instruction based on selection
-        function updateMapInstruction() {
-            const instruction = document.getElementById('map-instruction');
-            if (selectedSound) {
-                instruction.textContent = `Click on the map to place "${selectedSound.name}"`;
-                instruction.style.display = 'block';
-            } else {
-                instruction.textContent = 'Select a sound from the library, then click on the map to place it';
-                // Only show the instruction if no markers have been placed yet
-                if (soundMarkers.length === 0) {
-                    instruction.style.display = 'block';
-                }
-            }
         }
 
         // Handle file upload
@@ -1192,7 +1463,338 @@
         updateMapInstruction();
 
         // Add to the initialization section
-        initializeMarkerIcons();
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeMarkerIcons();
+        });
+
+        // Optimize default sound loading
+        function loadDefaultSounds() {
+            const existingDefaultSounds = soundLibrary.filter(s => s.isDefault);
+            if (existingDefaultSounds.length < 2) {
+                defaultSounds.forEach(defaultSound => {
+                    if (!existingDefaultSounds.some(s => s.name === defaultSound.name)) {
+                        soundLibrary.push(defaultSound);
+                    }
+                });
+            }
+        }
+
+        // Add responsive drag-and-drop functionality
+        function initializeDragAndDrop(item, sound) {
+            const isMobile = 'ontouchstart' in window;
+            
+            if (!isMobile && !sound.isDefault) {
+                item.draggable = true;
+                
+                // Desktop drag events
+                item.addEventListener('dragstart', function(e) {
+                    this.classList.add('dragging');
+                    e.dataTransfer.setData('text/plain', sound.id);
+                });
+
+                item.addEventListener('dragend', function() {
+                    this.classList.remove('dragging');
+                });
+
+                item.addEventListener('dragover', function(e) {
+                    e.preventDefault();
+                    this.classList.add('drag-over');
+                });
+
+                item.addEventListener('dragleave', function() {
+                    this.classList.remove('drag-over');
+                });
+
+                item.addEventListener('drop', function(e) {
+                    e.preventDefault();
+                    this.classList.remove('drag-over');
+                    const draggedId = e.dataTransfer.getData('text/plain');
+                    const draggedSound = soundLibrary.find(s => s.id === draggedId);
+                    const draggedIndex = soundLibrary.indexOf(draggedSound);
+                    const dropIndex = soundLibrary.indexOf(sound);
+                    
+                    if (draggedIndex !== dropIndex) {
+                        // Reorder sounds
+                        soundLibrary.splice(draggedIndex, 1);
+                        soundLibrary.splice(dropIndex, 0, draggedSound);
+                        updateSoundList();
+                    }
+                });
+            } else {
+                // Mobile touch events
+                let pressTimer;
+                let isDragging = false;
+
+                item.addEventListener('touchstart', function(e) {
+                    if (!sound.isDefault) {
+                        pressTimer = setTimeout(() => {
+                            this.classList.add('dragging');
+                            isDragging = true;
+                        }, 500);
+                    }
+                });
+
+                item.addEventListener('touchmove', function(e) {
+                    if (isDragging) {
+                        e.preventDefault();
+                        const touch = e.touches[0];
+                        const target = document.elementFromPoint(touch.clientX, touch.clientY);
+                        if (target && target.closest('.sound-item')) {
+                            const targetItem = target.closest('.sound-item');
+                            const targetSound = soundLibrary.find(s => s.id === targetItem.dataset.soundId);
+                            if (targetSound && !targetSound.isDefault) {
+                                document.querySelectorAll('.sound-item').forEach(item => 
+                                    item.classList.remove('drag-over'));
+                                targetItem.classList.add('drag-over');
+                            }
+                        }
+                    }
+                });
+
+                item.addEventListener('touchend', function() {
+                    clearTimeout(pressTimer);
+                    if (isDragging) {
+                        this.classList.remove('dragging');
+                        isDragging = false;
+                        
+                        const targetItem = document.querySelector('.sound-item.drag-over');
+                        if (targetItem) {
+                            const targetSound = soundLibrary.find(s => s.id === targetItem.dataset.soundId);
+                            const draggedSound = soundLibrary.find(s => s.id === this.dataset.soundId);
+                            
+                            if (targetSound && draggedSound && !targetSound.isDefault && !draggedSound.isDefault) {
+                                const draggedIndex = soundLibrary.indexOf(draggedSound);
+                                const dropIndex = soundLibrary.indexOf(targetSound);
+                                
+                                soundLibrary.splice(draggedIndex, 1);
+                                soundLibrary.splice(dropIndex, 0, draggedSound);
+                                updateSoundList();
+                            }
+                        }
+                        
+                        document.querySelectorAll('.sound-item').forEach(item => 
+                            item.classList.remove('drag-over'));
+                    }
+                });
+            }
+        }
+
+        // Modify the createSoundItem function to include drag-and-drop initialization
+        function createSoundItem(sound) {
+            const item = document.createElement('div');
+            item.className = 'sound-item';
+            item.dataset.soundId = sound.id;
+            
+            // ... existing sound item creation code ...
+            
+            const audio = document.createElement('audio');
+            audio.src = sound.url;
+            audio.controls = true;
+            item.appendChild(audio);
+            
+            // Initialize audio visualization
+            initializeAudioVisualization(audio);
+            
+            // Initialize drag and drop
+            initializeDragAndDrop(item, sound);
+            
+            return item;
+        }
+
+        // Add to your initialization code
+        document.addEventListener('DOMContentLoaded', function() {
+            loadDefaultSounds();
+            initializeMarkerIcons();
+            initializeMapInteractions();
+            // ... rest of your initialization code ...
+        });
+
+        // Add audio visualization
+        function initializeAudioVisualization(audio) {
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const analyser = audioContext.createAnalyser();
+            const source = audioContext.createMediaElementSource(audio);
+            
+            source.connect(analyser);
+            analyser.connect(audioContext.destination);
+            
+            analyser.fftSize = 256;
+            const bufferLength = analyser.frequencyBinCount;
+            const dataArray = new Uint8Array(bufferLength);
+            
+            const canvas = document.createElement('canvas');
+            canvas.width = 200;
+            canvas.height = 40;
+            canvas.style.width = '100%';
+            canvas.style.height = '40px';
+            canvas.style.marginTop = '5px';
+            canvas.style.backgroundColor = '#f0f0f0';
+            canvas.style.borderRadius = '4px';
+            
+            audio.parentNode.insertBefore(canvas, audio.nextSibling);
+            
+            const ctx = canvas.getContext('2d');
+            
+            function draw() {
+                requestAnimationFrame(draw);
+                analyser.getByteFrequencyData(dataArray);
+                
+                ctx.fillStyle = '#f0f0f0';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                
+                const barWidth = (canvas.width / bufferLength) * 2.5;
+                let barHeight;
+                let x = 0;
+                
+                for (let i = 0; i < bufferLength; i++) {
+                    barHeight = dataArray[i] / 2;
+                    
+                    ctx.fillStyle = `rgb(${barHeight + 100}, 50, 50)`;
+                    ctx.fillRect(x, canvas.height - barHeight, barWidth, barHeight);
+                    
+                    x += barWidth + 1;
+                }
+            }
+            
+            draw();
+        }
+
+        // Enhance map interactions
+        function initializeMapInteractions() {
+            // Disable double-click zoom
+            map.doubleClickZoom.disable();
+            
+            // Add custom zoom controls
+            L.control.zoom({
+                position: 'topright',
+                zoomInText: '＋',
+                zoomOutText: '－'
+            }).addTo(map);
+            
+            // Add touch-friendly controls for mobile
+            if ('ontouchstart' in window) {
+                map.tap.enable();
+                map.dragging.enable();
+            }
+            
+            // Add smooth zoom animation
+            map.on('zoomstart', function() {
+                map.getContainer().style.transition = 'all 0.3s ease-out';
+            });
+            
+            map.on('zoomend', function() {
+                map.getContainer().style.transition = '';
+            });
+        }
+
+        // Add performance optimizations
+        const debounce = (func, wait) => {
+            let timeout;
+            return (...args) => {
+                clearTimeout(timeout);
+                timeout = setTimeout(() => func(...args), wait);
+            };
+        };
+
+        // Optimize save operations with debounce
+        const debouncedSave = debounce(saveData, 1000);
+
+        // Initialize IndexedDB
+        let db;
+        const initIndexedDB = () => {
+            const request = indexedDB.open('SoundMapDB', 1);
+            
+            request.onupgradeneeded = function(event) {
+                db = event.target.result;
+                if (!db.objectStoreNames.contains('sounds')) {
+                    db.createObjectStore('sounds', { keyPath: 'id' });
+                }
+            };
+
+            request.onsuccess = function(event) {
+                db = event.target.result;
+                loadSavedData();
+            };
+
+            request.onerror = function(event) {
+                console.error('Database error:', event.target.error);
+            };
+        };
+
+        // Initialize marker cluster group with optimized settings
+        const markerClusterGroup = L.markerClusterGroup({
+            spiderfyOnMaxZoom: true,
+            showCoverageOnHover: false,
+            maxClusterRadius: 50,
+            disableClusteringAtZoom: 19,
+            chunkedLoading: true,
+            chunkInterval: 200,
+            chunkDelay: 50,
+            iconCreateFunction: function(cluster) {
+                const count = cluster.getChildCount();
+                const color = count > 10 ? '#ff4444' : count > 5 ? '#ffbb33' : '#00C851';
+                return L.divIcon({
+                    html: `<div class="marker-cluster" style="background-color: ${color}">${count}</div>`,
+                    className: 'marker-cluster',
+                    iconSize: L.point(40, 40),
+                    iconAnchor: L.point(20, 20)
+                });
+            }
+        });
+
+        map.addLayer(markerClusterGroup);
+
+        // Implement getAudioFromDB
+        async function getAudioFromDB(id) {
+            return new Promise((resolve, reject) => {
+                const transaction = db.transaction(['sounds'], 'readonly');
+                const store = transaction.objectStore('sounds');
+                const request = store.get(id);
+                
+                request.onsuccess = (e) => resolve(e.target.result?.data);
+                request.onerror = (e) => reject(e.target.error);
+            });
+        }
+
+        // Handle AudioContext release
+        function initializeAudioVisualization(audio) {
+            let audioContext;
+            
+            audio.addEventListener('play', () => {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                // ... rest of initialization code ...
+            });
+
+            audio.addEventListener('ended', () => {
+                if (audioContext) {
+                    audioContext.close().catch(() => {});
+                }
+            });
+        }
+
+        // Initialize recording functionality
+        let mediaRecorder = null;
+        document.getElementById('record-btn').addEventListener('click', async () => {
+            if (!mediaRecorder) {
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    mediaRecorder = new MediaRecorder(stream);
+                    // ... recording logic ...
+                } catch (error) {
+                    console.error('Error accessing microphone:', error);
+                }
+            } else {
+                mediaRecorder.stop();
+            }
+        });
+
+        // Initialize the page
+        document.addEventListener('DOMContentLoaded', function() {
+            loadSavedData();
+            initializeMarkerIcons();
+            initializeMapInteractions();
+            initializeKeyboardNavigation();
+        });
     </script>
 </body>
 </html>
